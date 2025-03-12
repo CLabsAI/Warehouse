@@ -1,0 +1,811 @@
+!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualização da Planta Baixa do CD</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            padding: 20px;
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background-color: #3949ab;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background-color: #303f9f;
+        }
+        
+        .info-panel {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            flex: 1;
+            min-width: 150px;
+            background-color: #2a2a2a;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        /* CD Map */
+        .cd-map-container {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            overflow: auto;
+            position: relative;
+        }
+        
+        .cd-map {
+            position: relative;
+            min-height: 700px;
+            width: 100%;
+        }
+        
+        /* Porta Pallets (estruturas verdes) */
+        .porta-pallet {
+            position: absolute;
+            border: 2px solid #4caf50;
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+        
+        .pp-grid {
+            display: grid;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .pp-cell {
+            border: 1px solid #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            color: #ffffff;
+            background-color: #1e1e1e;
+            cursor: pointer;
+        }
+        
+        .pp-cell.occupied {
+            background-color: #1976d2;
+        }
+        
+        .pp-cell.selected {
+            background-color: #ff9800;
+        }
+        
+        /* Solo positions (red boxes) */
+        .solo-position {
+            position: absolute;
+            border: 2px solid #f44336;
+            background-color: #1e1e1e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            color: #ffffff;
+            cursor: pointer;
+        }
+        
+        .solo-position.occupied {
+            background-color: #1976d2;
+        }
+        
+        .solo-position.selected {
+            background-color: #ff9800;
+        }
+        
+        /* Position details */
+        .position-details {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .details-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 10px;
+        }
+        
+        .details-label {
+            font-weight: bold;
+        }
+        
+        .details-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            width: 400px;
+            max-width: 90%;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: white;
+            box-sizing: border-box;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* Legend */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+            pointer-events: none;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <div class="container">
+        <h1>Visualização da Planta Baixa do CD</h1>
+        
+        <div class="controls">
+            <button id="exportBtn" class="btn">Exportar Dados</button>
+            <button id="importBtn" class="btn">Importar Dados</button>
+        </div>
+        
+        <div class="info-panel">
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Total de Posições</div>
+                    <div class="stat-value" id="totalPositions">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Posições Ocupadas</div>
+                    <div class="stat-value" id="occupiedPositions">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Posições Livres</div>
+                    <div class="stat-value" id="freePositions">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Taxa de Ocupação</div>
+                    <div class="stat-value" id="occupancyRate">0%</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #1e1e1e; border: 1px solid #ffffff;"></div>
+                <span>Posição Vazia</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #1976d2;"></div>
+                <span>Posição Ocupada</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff9800;"></div>
+                <span>Posição Selecionada</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="border: 2px solid #4caf50; background-color: rgba(76, 175, 80, 0.1);"></div>
+                <span>Estrutura Porta-Pallet</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="border: 2px solid #f44336; background-color: #1e1e1e;"></div>
+                <span>Posição Solo</span>
+            </div>
+        </div>
+        
+        <div class="cd-map-container">
+            <div class="cd-map" id="cdMap">
+                <!-- O mapa do CD será renderizado aqui pelo JavaScript -->
+            </div>
+        </div>
+        
+        <div class="position-details" id="positionDetails">
+            <div class="details-title">Detalhes da Posição</div>
+            <div class="details-grid">
+                <div class="details-label">Endereço:</div>
+                <div id="posAddress">-</div>
+                
+                <div class="details-label">Tipo:</div>
+                <div id="posType">-</div>
+                
+                <div class="details-label">Nível:</div>
+                <div id="posLevel">-</div>
+                
+                <div class="details-label">Status:</div>
+                <div id="posStatus">-</div>
+                
+                <div class="details-label">Produto:</div>
+                <div id="posProduct">-</div>
+            </div>
+            <div class="details-actions">
+                <button id="editBtn" class="btn">Editar Posição</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para editar posição -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-title">Editar Posição</div>
+            
+            <div class="form-group">
+                <label>Endereço:</label>
+                <input type="text" id="editAddress" class="form-control" disabled>
+            </div>
+            
+            <div class="form-group">
+                <label>Tipo:</label>
+                <input type="text" id="editType" class="form-control" disabled>
+            </div>
+            
+            <div class="form-group">
+                <label>Produto:</label>
+                <input type="text" id="editProduct" class="form-control" placeholder="Nome do produto">
+            </div>
+            
+            <div class="modal-actions">
+                <button id="cancelBtn" class="btn">Cancelar</button>
+                <button id="clearBtn" class="btn" style="background-color: #d32f2f;">Limpar</button>
+                <button id="saveBtn" class="btn" style="background-color: #388e3c;">Salvar</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Dados do CD
+        let cdData = [];
+        let selectedPosition = null;
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeData();
+            renderCD();
+            updateStats();
+            setupEventListeners();
+        });
+        
+        // Inicializar dados do CD
+        function initializeData() {
+            // Definição do layout baseado na planta baixa
+            const portaPalletBlocks = [
+                // Primeiro bloco (fileira curta superior)
+                {
+                    id: 1,
+                    x: 150,
+                    y: 50,
+                    width: 350,
+                    height: 60,
+                    columns: 7,
+                    rows: 2,
+                    ala: 1
+                },
+                // Segundo bloco (fileira curta meio)
+                {
+                    id: 2,
+                    x: 150,
+                    y: 170,
+                    width: 350,
+                    height: 60,
+                    columns: 7,
+                    rows: 2,
+                    ala: 1
+                },
+                // Terceiro bloco (fileira longa)
+                {
+                    id: 3,
+                    x: 150,
+                    y: 290,
+                    width: 550,
+                    height: 60,
+                    columns: 11,
+                    rows: 2,
+                    ala: 2
+                },
+                // Quarto bloco (fileira longa)
+                {
+                    id: 4,
+                    x: 150,
+                    y: 410,
+                    width: 550,
+                    height: 60,
+                    columns: 11,
+                    rows: 2,
+                    ala: 2
+                },
+                // Quinto bloco (fileira longa)
+                {
+                    id: 5,
+                    x: 150,
+                    y: 530,
+                    width: 550,
+                    height: 60,
+                    columns: 11,
+                    rows: 2,
+                    ala: 3
+                },
+                // Sexto bloco (fileira longa)
+                {
+                    id: 6,
+                    x: 150,
+                    y: 650,
+                    width: 550,
+                    height: 60,
+                    columns: 11,
+                    rows: 2,
+                    ala: 3
+                }
+            ];
+            
+            // Posições de solo (pallets vermelhos nas laterais)
+            const soloPositions = [
+                // Primeira coluna vertical de pallets solo
+                {
+                    id: 1,
+                    x: 70,
+                    y: 100,
+                    width: 40,
+                    height: 40,
+                    count: 11,
+                    spacing: 30,
+                    ala: 1
+                },
+                // Segunda coluna vertical de pallets solo
+                {
+                    id: 2,
+                    x: 70,
+                    y: 500,
+                    width: 40,
+                    height: 40,
+                    count: 11,
+                    spacing: 30,
+                    ala: 3
+                }
+            ];
+            
+            // Criar os dados de porta-pallets
+            portaPalletBlocks.forEach(block => {
+                const cellWidth = block.width / block.columns;
+                const cellHeight = block.height / block.rows;
+                
+                for (let col = 0; col < block.columns; col++) {
+                    for (let row = 0; row < block.rows; row++) {
+                        // Cada posição no porta-pallet representa um pallet
+                        // Calcular o nível baseado em qual porta-pallet e posição
+                        // Para simplificar, vamos dizer:
+                        // - Primeira fileira (row 0): nível 1 (picking)
+                        // - Segunda fileira (row 1): nível 2 (picking)
+                        // Nota: O sistema real teria 6 níveis, mas estamos mostrando apenas a vista superior
+                        
+                        const nivel = row + 1;
+                        const posicao = col % 2 === 0 ? 'A' : 'B';
+                        const portaPallet = Math.floor(col / 2) + 1;
+                        const prateleira = `P${block.id}${String(portaPallet).padStart(2, '0')}`;
+                        const endereco = `01-${block.ala}-${prateleira}-${String(nivel).padStart(2, '0')}${posicao}`;
+                        const tipo = nivel <= 2 ? 'picking' : 'pulmao';
+                        
+                        cdData.push({
+                            endereco,
+                            bloco: block.id,
+                            ala: block.ala,
+                            portaPallet,
+                            prateleira,
+                            nivel,
+                            posicao,
+                            tipo,
+                            produto: null,
+                            ocupado: false,
+                            x: block.x + col * cellWidth,
+                            y: block.y + row * cellHeight,
+                            width: cellWidth,
+                            height: cellHeight,
+                            isSolo: false
+                        });
+                    }
+                }
+            });
+            
+            // Criar posições de solo
+            soloPositions.forEach(solo => {
+                for (let i = 0; i < solo.count; i++) {
+                    const posY = solo.y + i * (solo.height + solo.spacing);
+                    const prateleira = `S${solo.id}${String(i+1).padStart(2, '0')}`;
+                    const endereco = `01-${solo.ala}-${prateleira}-00C`;
+                    
+                    cdData.push({
+                        endereco,
+                        ala: solo.ala,
+                        prateleira,
+                        nivel: 0, // Nível 0 indica solo
+                        posicao: 'C',
+                        tipo: 'pulmao', // Solo sempre é pulmão
+                        produto: null,
+                        ocupado: false,
+                        x: solo.x,
+                        y: posY,
+                        width: solo.width,
+                        height: solo.height,
+                        isSolo: true
+                    });
+                }
+            });
+        }
+        
+        // Renderizar o CD
+        function renderCD() {
+            const cdMap = document.getElementById('cdMap');
+            cdMap.innerHTML = '';
+            
+            // Renderizar porta-pallets
+            const portaPalletBlocks = [...new Set(cdData.filter(p => !p.isSolo).map(p => p.bloco))];
+            
+            portaPalletBlocks.forEach(blocId => {
+                const positions = cdData.filter(p => p.bloco === blocId);
+                
+                // Calcular as dimensões do bloco
+                const minX = Math.min(...positions.map(p => p.x));
+                const maxX = Math.max(...positions.map(p => p.x + p.width));
+                const minY = Math.min(...positions.map(p => p.y));
+                const maxY = Math.max(...positions.map(p => p.y + p.height));
+                
+                // Criar estrutura do porta-pallet
+                const ppElement = document.createElement('div');
+                ppElement.className = 'porta-pallet';
+                ppElement.style.left = `${minX}px`;
+                ppElement.style.top = `${minY}px`;
+                ppElement.style.width = `${maxX - minX}px`;
+                ppElement.style.height = `${maxY - minY}px`;
+                
+                // Grid para as células
+                const gridElement = document.createElement('div');
+                gridElement.className = 'pp-grid';
+                
+                // Determinar número de colunas e linhas
+                const columns = [...new Set(positions.map(p => p.x))].length;
+                const rows = [...new Set(positions.map(p => p.y))].length;
+                
+                gridElement.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+                gridElement.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+                
+                // Ordenar posições por coordenadas
+                positions.sort((a, b) => {
+                    if (a.y === b.y) return a.x - b.x;
+                    return a.y - b.y;
+                });
+                
+                // Adicionar cada célula
+                positions.forEach(position => {
+                    const cellElement = document.createElement('div');
+                    cellElement.className = `pp-cell ${position.ocupado ? 'occupied' : ''} ${selectedPosition && selectedPosition.endereco === position.endereco ? 'selected' : ''}`;
+                    cellElement.dataset.endereco = position.endereco;
+                    cellElement.textContent = `${position.posicao}${position.nivel}`;
+                    
+                    // Tooltip
+                    cellElement.addEventListener('mouseover', (e) => {
+                        showTooltip(e, `${position.endereco} (${position.tipo}) ${position.produto ? '- ' + position.produto : '(Vazio)'}`);
+                    });
+                    
+                    cellElement.addEventListener('mouseout', () => {
+                        hideTooltip();
+                    });
+                    
+                    // Evento de clique
+                    cellElement.addEventListener('click', () => {
+                        selectPosition(position);
+                    });
+                    
+                    gridElement.appendChild(cellElement);
+                });
+                
+                ppElement.appendChild(gridElement);
+                cdMap.appendChild(ppElement);
+            });
+            
+            // Renderizar posições de solo
+            const soloPositions = cdData.filter(p => p.isSolo);
+            
+            soloPositions.forEach(position => {
+                const soloElement = document.createElement('div');
+                soloElement.className = `solo-position ${position.ocupado ? 'occupied' : ''} ${selectedPosition && selectedPosition.endereco === position.endereco ? 'selected' : ''}`;
+                soloElement.style.left = `${position.x}px`;
+                soloElement.style.top = `${position.y}px`;
+                soloElement.style.width = `${position.width}px`;
+                soloElement.style.height = `${position.height}px`;
+                soloElement.dataset.endereco = position.endereco;
+                soloElement.textContent = position.prateleira.substring(1, 3);
+                
+                // Tooltip
+                soloElement.addEventListener('mouseover', (e) => {
+                    showTooltip(e, `${position.endereco} (${position.tipo}) ${position.produto ? '- ' + position.produto : '(Vazio)'}`);
+                });
+                
+                soloElement.addEventListener('mouseout', () => {
+                    hideTooltip();
+                });
+                
+                // Evento de clique
+                soloElement.addEventListener('click', () => {
+                    selectPosition(position);
+                });
+                
+                cdMap.appendChild(soloElement);
+            });
+        }
+        
+        // Selecionar uma posição
+        function selectPosition(position) {
+            selectedPosition = position;
+            
+            // Atualizar detalhes
+            document.getElementById('posAddress').textContent = position.endereco;
+            document.getElementById('posType').textContent = position.tipo.charAt(0).toUpperCase() + position.tipo.slice(1);
+            document.getElementById('posLevel').textContent = position.nivel === 0 ? 'Solo' : position.nivel;
+            document.getElementById('posStatus').textContent = position.ocupado ? 'Ocupado' : 'Vazio';
+            document.getElementById('posProduct').textContent = position.produto || 'Nenhum';
+            
+            // Renderizar novamente para atualizar a seleção
+            renderCD();
+        }
+        
+        // Atualizar estatísticas
+        function updateStats() {
+            const total = cdData.length;
+            const occupied = cdData.filter(p => p.ocupado).length;
+            const free = total - occupied;
+            const rate = (occupied / total * 100).toFixed(1);
+            
+            document.getElementById('totalPositions').textContent = total;
+            document.getElementById('occupiedPositions').textContent = occupied;
+            document.getElementById('freePositions').textContent = free;
+            document.getElementById('occupancyRate').textContent = `${rate}%`;
+        }
+        
+        // Mostrar tooltip
+        function showTooltip(event, text) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.textContent = text;
+            tooltip.style.display = 'block';
+            tooltip.style.left = `${event.pageX + 10}px`;
+            tooltip.style.top = `${event.pageY + 10}px`;
+        }
+        
+        // Esconder tooltip
+        function hideTooltip() {
+            document.getElementById('tooltip').style.display = 'none';
+        }
+        
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Botão de editar
+            document.getElementById('editBtn').addEventListener('click', () => {
+                if (!selectedPosition) return;
+                
+                // Preencher campos do modal
+                document.getElementById('editAddress').value = selectedPosition.endereco;
+                document.getElementById('editType').value = selectedPosition.tipo.charAt(0).toUpperCase() + selectedPosition.tipo.slice(1);
+                document.getElementById('editProduct').value = selectedPosition.produto || '';
+                
+                // Mostrar modal
+                document.getElementById('editModal').style.display = 'flex';
+            });
+            
+            // Botão de cancelar edição
+            document.getElementById('cancelBtn').addEventListener('click', () => {
+                document.getElementById('editModal').style.display = 'none';
+            });
+            
+            // Botão de limpar posição
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                if (!selectedPosition) return;
+                
+                selectedPosition.produto = null;
+                selectedPosition.ocupado = false;
+                
+                // Fechar modal
+                document.getElementById('editModal').style.display = 'none';
+                
+                // Atualizar interface
+                selectPosition(selectedPosition);
+                updateStats();
+            });
+            
+            // Botão de salvar
+            document.getElementById('saveBtn').addEventListener('click', () => {
+                if (!selectedPosition) return;
+                
+                const produto = document.getElementById('editProduct').value.trim();
+                
+                selectedPosition.produto = produto || null;
+                selectedPosition.ocupado = produto !== '';
+                
+                // Fechar modal
+                document.getElementById('editModal').style.display = 'none';
+                
+                // Atualizar interface
+                selectPosition(selectedPosition);
+                updateStats();
+            });
+            
+            // Exportar dados
+            document.getElementById('exportBtn').addEventListener('click', () => {
+                const dataStr = JSON.stringify(cdData);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = 'cd_data.json';
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            });
+            
+            // Importar dados
+            document.getElementById('importBtn').addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                
+                input.onchange = e => {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    
+                    reader.onload = readerEvent => {
+                        try {
+                            const content = readerEvent.target.result;
+                            cdData = JSON.parse(content);
+                            
+                            renderCD();
+                            updateStats();
+                            
+                            selectedPosition = null;
+                            
+                            // Limpar detalhes
+                            document.getElementById('posAddress').textContent = '-';
+                            document.getElementById('posType').textContent = '-';
+                            document.getElementById('posLevel').textContent = '-';
+                            document.getElementById('posStatus').textContent = '-';
+                            document.getElementById('posProduct').textContent = '-';
+                            
+                            alert('Dados importados com sucesso!');
+                        } catch (error) {
+                            alert('Erro ao importar o arquivo: ' + error.message);
+                        }
+                    };
+                    
+                    reader.readAsText(file, 'UTF-8');
+                };
+                
+                input.click();
+            });
+        }
+    </script>
+</body>
+</html>
