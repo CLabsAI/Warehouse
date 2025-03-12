@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -276,6 +276,7 @@
         <div class="controls">
             <button id="exportBtn" class="btn">Exportar Dados</button>
             <button id="importBtn" class="btn">Importar Dados</button>
+            <button id="addPalletBtn" class="btn" style="background-color: #4caf50;">Adicionar Pallet Solo</button>
         </div>
         
         <div class="info-panel">
@@ -353,6 +354,7 @@
     </div>
     
     <!-- Modal para editar posição -->
+    <!-- Modal para editar posição -->
     <div class="modal" id="editModal">
         <div class="modal-content">
             <div class="modal-title">Editar Posição</div>
@@ -372,10 +374,73 @@
                 <input type="text" id="editProduct" class="form-control" placeholder="Nome do produto">
             </div>
             
+            <div id="positionEditControls" style="display: none;">
+                <div class="form-group">
+                    <label>Posição X:</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="number" id="editPalletX" class="form-control">
+                        <button id="editDecreaseX" class="btn">←</button>
+                        <button id="editIncreaseX" class="btn">→</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Posição Y:</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="number" id="editPalletY" class="form-control">
+                        <button id="editDecreaseY" class="btn">↑</button>
+                        <button id="editIncreaseY" class="btn">↓</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <button id="removeSoloPallet" class="btn" style="background-color: #d32f2f; width: 100%;">Remover Este Pallet</button>
+                </div>
+            </div>
+            
             <div class="modal-actions">
                 <button id="cancelBtn" class="btn">Cancelar</button>
                 <button id="clearBtn" class="btn" style="background-color: #d32f2f;">Limpar</button>
                 <button id="saveBtn" class="btn" style="background-color: #388e3c;">Salvar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para adicionar pallet solo -->
+    <div class="modal" id="addPalletModal">
+        <div class="modal-content">
+            <div class="modal-title">Adicionar Pallet Solo</div>
+            
+            <div class="form-group">
+                <label>Ala:</label>
+                <select id="newPalletAla" class="form-control">
+                    <option value="1">Ala 1</option>
+                    <option value="2">Ala 2</option>
+                    <option value="3">Ala 3</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Posição X:</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="number" id="newPalletX" class="form-control" value="70">
+                    <button id="decreaseX" class="btn">←</button>
+                    <button id="increaseX" class="btn">→</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Posição Y:</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="number" id="newPalletY" class="form-control" value="100">
+                    <button id="decreaseY" class="btn">↑</button>
+                    <button id="increaseY" class="btn">↓</button>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button id="cancelAddPallet" class="btn">Cancelar</button>
+                <button id="addNewPallet" class="btn" style="background-color: #388e3c;">Adicionar</button>
             </div>
         </div>
     </div>
@@ -388,10 +453,27 @@
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             initializeData();
+            // Remover pallets específicos
+            removerPalletsEspecificos();
             renderCD();
             updateStats();
             setupEventListeners();
         });
+        
+        // Função para remover pallets específicos
+        function removerPalletsEspecificos() {
+            const palletsParaRemover = [
+                '01-1-S114-00C',
+                '01-3-S208-00C',
+                '01-3-S209-00C',
+                '01-3-S210-00C'
+            ];
+            
+            // Filtrar os dados para excluir os pallets especificados
+            cdData = cdData.filter(pallet => !palletsParaRemover.includes(pallet.endereco));
+            
+            console.log('Pallets específicos removidos:', palletsParaRemover);
+        }
         
         // Inicializar dados do CD
         function initializeData() {
@@ -467,26 +549,26 @@
             
             // Posições de solo (pallets vermelhos nas laterais)
             const soloPositions = [
-                // Primeira coluna vertical de pallets solo
+                // Coluna vertical de pallets solo (entre os porta pallets 01-1-P101-01A e 01-2-P401-01A)
                 {
                     id: 1,
                     x: 70,
-                    y: 100,
-                    width: 40,
-                    height: 40,
-                    count: 11,
-                    spacing: 30,
+                    y: 95,  // Alinhado com o primeiro porta pallet
+                    width: 30,
+                    height: 30,
+                    count: 14, // 14 pallets vermelhos verticais
+                    spacing: 15, // Espaçamento ajustado para caber os 14 pallets na distância correta
                     ala: 1
                 },
-                // Segunda coluna vertical de pallets solo
+                // Coluna vertical de pallets solo (entre os porta pallets 01-3-P601-02A e 01-2-P401-02A)
                 {
                     id: 2,
                     x: 70,
-                    y: 500,
-                    width: 40,
-                    height: 40,
-                    count: 11,
-                    spacing: 30,
+                    y: 400, // Posição ajustada para alinhar com 01-2-P401-02A
+                    width: 30,
+                    height: 30,
+                    count: 10, // 10 pallets entre 01-3-P601-02A e 01-2-P401-02A
+                    spacing: 15, // Espaçamento consistente
                     ala: 3
                 }
             ];
@@ -606,6 +688,8 @@
                     const cellElement = document.createElement('div');
                     cellElement.className = `pp-cell ${position.ocupado ? 'occupied' : ''} ${selectedPosition && selectedPosition.endereco === position.endereco ? 'selected' : ''}`;
                     cellElement.dataset.endereco = position.endereco;
+                    
+                    // Label da célula mais claro
                     cellElement.textContent = `${position.posicao}${position.nivel}`;
                     
                     // Tooltip
@@ -629,7 +713,7 @@
                 cdMap.appendChild(ppElement);
             });
             
-            // Renderizar posições de solo
+            // Renderizar posições de solo primeiro (para ficarem atrás)
             const soloPositions = cdData.filter(p => p.isSolo);
             
             soloPositions.forEach(position => {
@@ -640,6 +724,8 @@
                 soloElement.style.width = `${position.width}px`;
                 soloElement.style.height = `${position.height}px`;
                 soloElement.dataset.endereco = position.endereco;
+                
+                // Número da posição mais claro
                 soloElement.textContent = position.prateleira.substring(1, 3);
                 
                 // Tooltip
@@ -704,6 +790,9 @@
         
         // Configurar event listeners
         function setupEventListeners() {
+            // Modo atual (normal ou remover pallet)
+            let isRemoveMode = false;
+            
             // Botão de editar
             document.getElementById('editBtn').addEventListener('click', () => {
                 if (!selectedPosition) return;
@@ -712,6 +801,15 @@
                 document.getElementById('editAddress').value = selectedPosition.endereco;
                 document.getElementById('editType').value = selectedPosition.tipo.charAt(0).toUpperCase() + selectedPosition.tipo.slice(1);
                 document.getElementById('editProduct').value = selectedPosition.produto || '';
+                
+                // Se for um pallet de solo, mostrar controles de posicionamento
+                if (selectedPosition.isSolo) {
+                    document.getElementById('positionEditControls').style.display = 'block';
+                    document.getElementById('editPalletX').value = selectedPosition.x;
+                    document.getElementById('editPalletY').value = selectedPosition.y;
+                } else {
+                    document.getElementById('positionEditControls').style.display = 'none';
+                }
                 
                 // Mostrar modal
                 document.getElementById('editModal').style.display = 'flex';
@@ -746,12 +844,178 @@
                 selectedPosition.produto = produto || null;
                 selectedPosition.ocupado = produto !== '';
                 
+                // Se for um pallet de solo, também atualizar posição
+                if (selectedPosition.isSolo) {
+                    const newX = parseInt(document.getElementById('editPalletX').value);
+                    const newY = parseInt(document.getElementById('editPalletY').value);
+                    
+                    // Verificar se não há colisão com outros pallets
+                    const existingAtPosition = cdData.find(p => 
+                        p.endereco !== selectedPosition.endereco && // Não é o mesmo pallet
+                        Math.abs(p.x - newX) < 30 && Math.abs(p.y - newY) < 30 // Está próximo
+                    );
+                    
+                    if (existingAtPosition) {
+                        alert('Já existe um pallet próximo a esta posição. Escolha outra localização.');
+                        return;
+                    }
+                    
+                    // Atualizar posição
+                    selectedPosition.x = newX;
+                    selectedPosition.y = newY;
+                }
+                
                 // Fechar modal
                 document.getElementById('editModal').style.display = 'none';
                 
                 // Atualizar interface
-                selectPosition(selectedPosition);
+                renderCD();
                 updateStats();
+            });
+            
+            // Botão para adicionar pallet solo
+            document.getElementById('addPalletBtn').addEventListener('click', () => {
+                // Mostrar modal de adicionar pallet
+                document.getElementById('addPalletModal').style.display = 'flex';
+                
+                // Valor inicial no centro da tela
+                document.getElementById('newPalletX').value = 70;
+                document.getElementById('newPalletY').value = 100;
+            });
+            
+            // Cancelar adição de pallet
+            document.getElementById('cancelAddPallet').addEventListener('click', () => {
+                document.getElementById('addPalletModal').style.display = 'none';
+            });
+            
+            // Adicionar novo pallet
+            document.getElementById('addNewPallet').addEventListener('click', () => {
+                const ala = parseInt(document.getElementById('newPalletAla').value);
+                const x = parseInt(document.getElementById('newPalletX').value);
+                const y = parseInt(document.getElementById('newPalletY').value);
+                
+                // Gerar novo código de prateleira
+                const palletCount = cdData.filter(p => p.isSolo && p.ala === ala).length;
+                const newPrateleiraNum = palletCount + 1;
+                const prateleira = `S${ala}${String(newPrateleiraNum).padStart(2, '0')}`;
+                const endereco = `01-${ala}-${prateleira}-00C`;
+                
+                // Verificar se já existe pallet nesta posição
+                const existingAtPosition = cdData.find(p => 
+                    Math.abs(p.x - x) < 30 && Math.abs(p.y - y) < 30
+                );
+                
+                if (existingAtPosition) {
+                    alert('Já existe um pallet próximo a esta posição. Escolha outra localização.');
+                    return;
+                }
+                
+                // Adicionar novo pallet
+                const newPallet = {
+                    endereco,
+                    ala,
+                    prateleira,
+                    nivel: 0,
+                    posicao: 'C',
+                    tipo: 'pulmao',
+                    produto: null,
+                    ocupado: false,
+                    x,
+                    y,
+                    width: 30,
+                    height: 30,
+                    isSolo: true
+                };
+                
+                cdData.push(newPallet);
+                
+                // Fechar modal
+                document.getElementById('addPalletModal').style.display = 'none';
+                
+                // Atualizar interface
+                renderCD();
+                updateStats();
+                
+                // Selecionar o novo pallet
+                selectPosition(newPallet);
+            });
+            
+            // Ajustar posição X/Y com os botões de seta
+            document.getElementById('decreaseX').addEventListener('click', () => {
+                const input = document.getElementById('newPalletX');
+                input.value = parseInt(input.value) - 10;
+            });
+            
+            document.getElementById('increaseX').addEventListener('click', () => {
+                const input = document.getElementById('newPalletX');
+                input.value = parseInt(input.value) + 10;
+            });
+            
+            document.getElementById('decreaseY').addEventListener('click', () => {
+                const input = document.getElementById('newPalletY');
+                input.value = parseInt(input.value) - 10;
+            });
+            
+            document.getElementById('increaseY').addEventListener('click', () => {
+                const input = document.getElementById('newPalletY');
+                input.value = parseInt(input.value) + 10;
+            });
+            
+            // Ajustar posição X/Y para edição com os botões de seta
+            document.getElementById('editDecreaseX').addEventListener('click', () => {
+                const input = document.getElementById('editPalletX');
+                input.value = parseInt(input.value) - 10;
+            });
+            
+            document.getElementById('editIncreaseX').addEventListener('click', () => {
+                const input = document.getElementById('editPalletX');
+                input.value = parseInt(input.value) + 10;
+            });
+            
+            document.getElementById('editDecreaseY').addEventListener('click', () => {
+                const input = document.getElementById('editPalletY');
+                input.value = parseInt(input.value) - 10;
+            });
+            
+            document.getElementById('editIncreaseY').addEventListener('click', () => {
+                const input = document.getElementById('editPalletY');
+                input.value = parseInt(input.value) + 10;
+            });
+            
+            // Remover pallet solo direto do modal de edição
+            document.getElementById('removeSoloPallet').addEventListener('click', function() {
+                if (!selectedPosition || !selectedPosition.isSolo) return;
+                
+                console.log("Tentando remover pallet:", selectedPosition.endereco);
+                
+                if (confirm(`Deseja remover o pallet ${selectedPosition.endereco}?`)) {
+                    // Remover do array de dados
+                    const beforeLength = cdData.length;
+                    cdData = cdData.filter(p => p.endereco !== selectedPosition.endereco);
+                    const afterLength = cdData.length;
+                    
+                    console.log(`Remoção de pallet: antes ${beforeLength}, depois ${afterLength}`);
+                    
+                    // Fechar modal
+                    document.getElementById('editModal').style.display = 'none';
+                    
+                    // Limpar seleção
+                    selectedPosition = null;
+                    
+                    // Limpar detalhes
+                    document.getElementById('posAddress').textContent = '-';
+                    document.getElementById('posType').textContent = '-';
+                    document.getElementById('posLevel').textContent = '-';
+                    document.getElementById('posStatus').textContent = '-';
+                    document.getElementById('posProduct').textContent = '-';
+                    
+                    // Atualizar interface
+                    renderCD();
+                    updateStats();
+                    
+                    // Notificar usuário
+                    alert('Pallet removido com sucesso!');
+                }
             });
             
             // Exportar dados
